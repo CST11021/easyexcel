@@ -5,18 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author jipengfei
  */
 public class Sheet {
 
-    /**
-     */
+    /** 表示表头所占用的行数 */
     private int headLineMun;
 
-    /**
-     * Starting from 1
-     */
+    /** 表示页签索引，起始索引为1 */
     private int sheetNo;
 
     /**
@@ -39,7 +35,7 @@ public class Sheet {
     /**
      * column with
      */
-    private Map<Integer,Integer> columnWidthMap = new HashMap<Integer, Integer>();
+    private Map<Integer, Integer> columnWidthMap = new HashMap<Integer, Integer>();
 
     /**
      *
@@ -67,8 +63,7 @@ public class Sheet {
         this.clazz = clazz;
     }
 
-    public Sheet(int sheetNo, int headLineMun, Class<? extends BaseRowModel> clazz, String sheetName,
-                 List<List<String>> head) {
+    public Sheet(int sheetNo, int headLineMun, Class<? extends BaseRowModel> clazz, String sheetName, List<List<String>> head) {
         this.sheetNo = sheetNo;
         this.clazz = clazz;
         this.headLineMun = headLineMun;
@@ -127,8 +122,6 @@ public class Sheet {
         this.tableStyle = tableStyle;
     }
 
-
-
     public Map<Integer, Integer> getColumnWidthMap() {
         return columnWidthMap;
     }
@@ -140,14 +133,14 @@ public class Sheet {
     @Override
     public String toString() {
         return "Sheet{" +
-            "headLineMun=" + headLineMun +
-            ", sheetNo=" + sheetNo +
-            ", sheetName='" + sheetName + '\'' +
-            ", clazz=" + clazz +
-            ", head=" + head +
-            ", tableStyle=" + tableStyle +
-            ", columnWidthMap=" + columnWidthMap +
-            '}';
+                "headLineMun=" + headLineMun +
+                ", sheetNo=" + sheetNo +
+                ", sheetName='" + sheetName + '\'' +
+                ", clazz=" + clazz +
+                ", head=" + head +
+                ", tableStyle=" + tableStyle +
+                ", columnWidthMap=" + columnWidthMap +
+                '}';
     }
 
     public Boolean getAutoWidth() {

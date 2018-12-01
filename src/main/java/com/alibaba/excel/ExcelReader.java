@@ -22,7 +22,7 @@ public class ExcelReader {
     /**
      * Analyser
      */
-    private ExcelAnalyser analyser ;
+    private ExcelAnalyser analyser;
 
     /**
      * Create new reader
@@ -33,8 +33,7 @@ public class ExcelReader {
      * @param eventListener Callback method after each row is parsed.
      */
     @Deprecated
-    public ExcelReader(InputStream in, ExcelTypeEnum excelTypeEnum, Object customContent,
-                       AnalysisEventListener eventListener) {
+    public ExcelReader(InputStream in, ExcelTypeEnum excelTypeEnum, Object customContent, AnalysisEventListener eventListener) {
         this(in, excelTypeEnum, customContent, eventListener, true);
     }
 
@@ -45,8 +44,7 @@ public class ExcelReader {
      * @param customContent {@link AnalysisEventListener#invoke(Object, AnalysisContext) }AnalysisContext
      * @param eventListener Callback method after each row is parsed
      */
-    public ExcelReader(InputStream in, Object customContent,
-                       AnalysisEventListener eventListener) {
+    public ExcelReader(InputStream in, Object customContent, AnalysisEventListener eventListener) {
         this(in, customContent, eventListener, true);
     }
 
@@ -73,8 +71,7 @@ public class ExcelReader {
      *                      types. For example: '1234 ' contain a space cannot be converted to int.
      */
     @Deprecated
-    public ExcelReader(InputStream in, ExcelTypeEnum excelTypeEnum, Object customContent,
-                       AnalysisEventListener eventListener, boolean trim) {
+    public ExcelReader(InputStream in, ExcelTypeEnum excelTypeEnum, Object customContent, AnalysisEventListener eventListener, boolean trim) {
         validateParam(in, eventListener);
         analyser = new ExcelAnalyserImpl(in, excelTypeEnum, customContent, eventListener, trim);
     }
@@ -89,11 +86,10 @@ public class ExcelReader {
      *                      because there are often table contents with spaces that can not be converted into custom
      *                      types. For example: '1234 ' contain a space cannot be converted to int.
      */
-    public ExcelReader(InputStream in, Object customContent,
-                       AnalysisEventListener eventListener, boolean trim) {
+    public ExcelReader(InputStream in, Object customContent, AnalysisEventListener eventListener, boolean trim) {
         ExcelTypeEnum excelTypeEnum = ExcelTypeEnum.valueOf(in);
         validateParam(in, eventListener);
-        analyser =new ExcelAnalyserImpl(in, excelTypeEnum, customContent, eventListener, trim);
+        analyser = new ExcelAnalyserImpl(in, excelTypeEnum, customContent, eventListener, trim);
     }
 
     /**
@@ -115,7 +111,7 @@ public class ExcelReader {
     /**
      * Parse the specified sheet
      *
-     * @param sheet  Read sheet
+     * @param sheet Read sheet
      * @param clazz object parsed into each row of data
      */
     @Deprecated
@@ -134,12 +130,12 @@ public class ExcelReader {
     }
 
     /**
-     * validate param
+     * 校验参数，文件输入流和监听不允许为空
      *
      * @param in
      * @param eventListener
      */
-    private void validateParam(InputStream in,  AnalysisEventListener eventListener) {
+    private void validateParam(InputStream in, AnalysisEventListener eventListener) {
         if (eventListener == null) {
             throw new IllegalArgumentException("AnalysisEventListener can not null");
         } else if (in == null) {

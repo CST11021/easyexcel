@@ -57,6 +57,7 @@ public class ExcelColumnProperty implements Comparable<ExcelColumnProperty> {
         this.head = head;
     }
 
+    @Override
     public int compareTo(ExcelColumnProperty o) {
         int x = this.index;
         int y = o.getIndex();

@@ -17,6 +17,7 @@ import java.util.Arrays;
 import static com.alibaba.excel.constant.ExcelXmlConstants.*;
 
 /**
+ * 解析行处理器
  *
  * @author jipengfei
  */
@@ -24,28 +25,32 @@ public class XlsxRowHandler extends DefaultHandler {
 
     private String currentCellIndex;
 
+    /** 表示当前单元格的值类型 */
     private FieldType currentCellType;
 
+    /** 表示当前行 */
     private int curRow;
 
+    /** 表示当前列 */
     private int curCol;
 
     private String[] curRowContent = new String[20];
 
+    /** 当前单元格的值 */
     private String currentCellValue;
 
     private SharedStringsTable sst;
 
+    /** 解析上下文对象 */
     private AnalysisContext analysisContext;
 
+    /** 事件注册中心 */
     private AnalysisEventRegisterCenter registerCenter;
 
-    public XlsxRowHandler(AnalysisEventRegisterCenter registerCenter, SharedStringsTable sst,
-                          AnalysisContext analysisContext) {
+    public XlsxRowHandler(AnalysisEventRegisterCenter registerCenter, SharedStringsTable sst, AnalysisContext analysisContext) {
         this.registerCenter = registerCenter;
         this.analysisContext = analysisContext;
         this.sst = sst;
-
     }
 
     @Override
@@ -88,7 +93,7 @@ public class XlsxRowHandler extends DefaultHandler {
     private void endCellValue(String name) throws SAXException {
         // ensure size
         if (curCol >= curRowContent.length) {
-            curRowContent = Arrays.copyOf(curRowContent, (int)(curCol * 1.5));
+            curRowContent = Arrays.copyOf(curRowContent, (int) (curCol * 1.5));
         }
         if (CELL_VALUE_TAG.equals(name)) {
 
@@ -116,7 +121,6 @@ public class XlsxRowHandler extends DefaultHandler {
         currentCellValue += new String(ch, start, length);
     }
 
-
     private void setTotalRowCount(String name, Attributes attributes) {
         if (DIMENSION.equals(name)) {
             String d = attributes.getValue(DIMENSION_REF);
@@ -129,7 +133,7 @@ public class XlsxRowHandler extends DefaultHandler {
 
     private void endRow(String name) {
         if (name.equals(ROW_TAG)) {
-            registerCenter.notifyListeners(new OneRowAnalysisFinishEvent(curRowContent,curCol));
+            registerCenter.notifyListeners(new OneRowAnalysisFinishEvent(curRowContent, curCol));
             curRowContent = new String[20];
         }
     }

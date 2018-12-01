@@ -24,11 +24,11 @@ public class ReadTest {
     @Test
     public void simpleReadListStringV2007() throws IOException {
         InputStream inputStream = FileUtil.getResourcesFileInputStream("2007.xlsx");
+        // headLineMun表示表头占用的行数，这里设置为0，则解析时也会把表头解析出来，如果设置为1，这从第二行开始解析
         List<Object> data = EasyExcelFactory.read(inputStream, new Sheet(1, 0));
         inputStream.close();
         print(data);
     }
-
 
     /**
      * 07版本excel读数据量少于1千行数据自动转成javamodel，内部采用回调方法.
@@ -56,6 +56,7 @@ public class ReadTest {
         inputStream.close();
 
     }
+
     /**
      * 07版本excel读数据量大于1千行，内部采用回调方法.
      *
@@ -77,19 +78,18 @@ public class ReadTest {
     @Test
     public void saxReadSheetsV2007() throws IOException {
         InputStream inputStream = FileUtil.getResourcesFileInputStream("2007.xlsx");
-        ExcelListener excelListener = new ExcelListener();
-        ExcelReader excelReader = EasyExcelFactory.getReader(inputStream,excelListener);
+        ExcelReader excelReader = EasyExcelFactory.getReader(inputStream, new ExcelListener());
         List<Sheet> sheets = excelReader.getSheets();
-        System.out.println("llll****"+sheets);
-        System.out.println();
-        for (Sheet sheet:sheets) {
-            if(sheet.getSheetNo() ==1) {
+
+        // 解析每个页签
+        for (Sheet sheet : sheets) {
+            if (sheet.getSheetNo() == 1) {
                 excelReader.read(sheet);
-            }else if(sheet.getSheetNo() ==2){
+            } else if (sheet.getSheetNo() == 2) {
                 sheet.setHeadLineMun(1);
                 sheet.setClazz(ReadModel.class);
                 excelReader.read(sheet);
-            }else if(sheet.getSheetNo() ==3){
+            } else if (sheet.getSheetNo() == 3) {
                 sheet.setHeadLineMun(1);
                 sheet.setClazz(ReadModel2.class);
                 excelReader.read(sheet);
@@ -98,6 +98,10 @@ public class ReadTest {
         inputStream.close();
     }
 
+
+    // ----------------
+    // 测试 2003
+    // ----------------
 
 
     /**
@@ -161,13 +165,13 @@ public class ReadTest {
     public void saxReadSheetsV2003() throws IOException {
         InputStream inputStream = FileUtil.getResourcesFileInputStream("2003.xls");
         ExcelListener excelListener = new ExcelListener();
-        ExcelReader excelReader = EasyExcelFactory.getReader(inputStream,excelListener);
+        ExcelReader excelReader = EasyExcelFactory.getReader(inputStream, excelListener);
         List<Sheet> sheets = excelReader.getSheets();
         System.out.println();
-        for (Sheet sheet:sheets) {
-            if(sheet.getSheetNo() == 1) {
+        for (Sheet sheet : sheets) {
+            if (sheet.getSheetNo() == 1) {
                 excelReader.read(sheet);
-            }else {
+            } else {
                 sheet.setHeadLineMun(2);
                 sheet.setClazz(ReadModel.class);
                 excelReader.read(sheet);
@@ -176,10 +180,9 @@ public class ReadTest {
         inputStream.close();
     }
 
-
-    public void print(List<Object> datas){
-        int i=0;
-        for (Object ob:datas) {
+    public void print(List<Object> datas) {
+        int i = 0;
+        for (Object ob : datas) {
             System.out.println(i++);
             System.out.println(ob);
         }

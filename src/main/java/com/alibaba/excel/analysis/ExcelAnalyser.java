@@ -12,21 +12,21 @@ import java.util.List;
 public interface ExcelAnalyser {
 
     /**
-     * parse one sheet
+     * 解析指定的页签
      *
      * @param sheetParam
      */
     void analysis(Sheet sheetParam);
 
     /**
-     * parse all sheets
+     * 解析所有页签
      */
     void analysis();
 
     /**
-     * get all sheet of workbook
+     * 获取workbook的所有页签
      *
-     * @return all sheets
+     * @return
      */
     List<Sheet> getSheets();
 

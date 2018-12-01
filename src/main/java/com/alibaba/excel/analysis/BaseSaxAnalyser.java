@@ -17,15 +17,20 @@ import java.util.Map;
  */
 public abstract class BaseSaxAnalyser implements AnalysisEventRegisterCenter, ExcelAnalyser {
 
+    /**
+     * 解析excel的上下文对象
+     */
     protected AnalysisContext analysisContext;
 
+    /**
+     * Map<监听器名称, 监听器>
+     */
     private LinkedHashMap<String, AnalysisEventListener> listeners = new LinkedHashMap<String, AnalysisEventListener>();
 
     /**
-     * execute method
+     * 开始解析，子类扩展
      */
     protected abstract void execute();
-
 
     @Override
     public void appendLister(String name, AnalysisEventListener listener) {
@@ -44,8 +49,6 @@ public abstract class BaseSaxAnalyser implements AnalysisEventRegisterCenter, Ex
         execute();
     }
 
-    /**
-     */
     @Override
     public void cleanAllListeners() {
         listeners = new LinkedHashMap<String, AnalysisEventListener>();
@@ -53,21 +56,23 @@ public abstract class BaseSaxAnalyser implements AnalysisEventRegisterCenter, Ex
 
     @Override
     public void notifyListeners(OneRowAnalysisFinishEvent event) {
+        // 设置当前行的解析结果
         analysisContext.setCurrentRowAnalysisResult(event.getData());
         /** Parsing header content **/
         if (analysisContext.getCurrentRowNum() < analysisContext.getCurrentSheet().getHeadLineMun()) {
             if (analysisContext.getCurrentRowNum() <= analysisContext.getCurrentSheet().getHeadLineMun() - 1) {
-                analysisContext.buildExcelHeadProperty(null,
-                    (List<String>)analysisContext.getCurrentRowAnalysisResult());
+                analysisContext.buildExcelHeadProperty(null, (List<String>) analysisContext.getCurrentRowAnalysisResult());
             }
         } else {
-            List<String> content = converter((List<String>)event.getData());
+            List<String> content = converter((List<String>) event.getData());
+
             /** Parsing Analyze the body content **/
             analysisContext.setCurrentRowAnalysisResult(content);
             if (listeners.size() == 1) {
                 analysisContext.setCurrentRowAnalysisResult(content);
             }
-            /**  notify all event listeners **/
+
+            // 通知所有事件监听器
             for (Map.Entry<String, AnalysisEventListener> entry : listeners.entrySet()) {
                 entry.getValue().invoke(analysisContext.getCurrentRowAnalysisResult(), analysisContext);
             }

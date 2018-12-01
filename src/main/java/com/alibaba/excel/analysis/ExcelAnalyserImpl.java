@@ -18,14 +18,14 @@ import java.util.List;
  */
 public class ExcelAnalyserImpl implements ExcelAnalyser {
 
+    /** 解析excel的上下文对象 */
     private AnalysisContext analysisContext;
 
+    /** 表示excel解析器 */
     private BaseSaxAnalyser saxAnalyser;
 
-    public ExcelAnalyserImpl(InputStream inputStream, ExcelTypeEnum excelTypeEnum, Object custom,
-                             AnalysisEventListener eventListener, boolean trim) {
-        analysisContext = new AnalysisContextImpl(inputStream, excelTypeEnum, custom,
-            eventListener, trim);
+    public ExcelAnalyserImpl(InputStream inputStream, ExcelTypeEnum excelTypeEnum, Object custom, AnalysisEventListener eventListener, boolean trim) {
+        analysisContext = new AnalysisContextImpl(inputStream, excelTypeEnum, custom, eventListener, trim);
     }
 
     private BaseSaxAnalyser getSaxAnalyser() {
@@ -48,15 +48,15 @@ public class ExcelAnalyserImpl implements ExcelAnalyser {
                 } catch (Exception e) {
                     if (!analysisContext.getInputStream().markSupported()) {
                         throw new ExcelAnalysisException(
-                            "Xls must be available markSupported,you can do like this <code> new "
-                                + "BufferedInputStream(new FileInputStream(\"/xxxx\"))</code> ");
+                                "Xls must be available markSupported,you can do like this <code> new "
+                                        + "BufferedInputStream(new FileInputStream(\"/xxxx\"))</code> ");
                     }
                     this.saxAnalyser = new XlsSaxAnalyser(analysisContext);
                 }
             }
         } catch (Exception e) {
             throw new ExcelAnalysisException("File type error，io must be available markSupported,you can do like "
-                + "this <code> new BufferedInputStream(new FileInputStream(\\\"/xxxx\\\"))</code> \"", e);
+                    + "this <code> new BufferedInputStream(new FileInputStream(\\\"/xxxx\\\"))</code> \"", e);
         }
         return this.saxAnalyser;
     }
@@ -82,6 +82,11 @@ public class ExcelAnalyserImpl implements ExcelAnalyser {
         return saxAnalyser.getSheets();
     }
 
+    /**
+     * 添加监听器
+     *
+     * @param saxAnalyser
+     */
     private void appendListeners(BaseSaxAnalyser saxAnalyser) {
         saxAnalyser.cleanAllListeners();
         if (analysisContext.getCurrentSheet() != null && analysisContext.getCurrentSheet().getClazz() != null) {

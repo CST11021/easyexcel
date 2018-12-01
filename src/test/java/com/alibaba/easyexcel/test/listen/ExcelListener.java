@@ -8,15 +8,15 @@ import java.util.List;
 
 public class ExcelListener extends AnalysisEventListener {
 
-
-    private List<Object>  data = new ArrayList<Object>();
+    private List<Object> data = new ArrayList<Object>();
 
     @Override
     public void invoke(Object object, AnalysisContext context) {
         System.out.println(context.getCurrentSheet());
-        if(data.size()<=100){
+        // 小于100行时，将数据放入内存，大于100行时做其他处理
+        if (data.size() <= 100) {
             data.add(object);
-        }else {
+        } else {
             doSomething();
             data = new ArrayList<Object>();
         }
@@ -26,8 +26,9 @@ public class ExcelListener extends AnalysisEventListener {
     public void doAfterAllAnalysed(AnalysisContext context) {
         doSomething();
     }
-    public void doSomething(){
-        for (Object o:data) {
+
+    public void doSomething() {
+        for (Object o : data) {
             System.out.println(o);
         }
     }

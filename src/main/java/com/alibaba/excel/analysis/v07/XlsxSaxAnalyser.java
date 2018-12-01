@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author jipengfei
  */
 public class XlsxSaxAnalyser extends BaseSaxAnalyser {
@@ -33,6 +32,7 @@ public class XlsxSaxAnalyser extends BaseSaxAnalyser {
 
     private SharedStringsTable sharedStringsTable;
 
+    /** 解析器要解析的所有页签 */
     private List<SheetSource> sheetSourceList = new ArrayList<SheetSource>();
 
     private boolean use1904WindowDate = false;
@@ -56,14 +56,13 @@ public class XlsxSaxAnalyser extends BaseSaxAnalyser {
 
         XSSFReader.SheetIterator ite;
         sheetSourceList = new ArrayList<SheetSource>();
-        ite = (XSSFReader.SheetIterator)xssfReader.getSheetsData();
+        ite = (XSSFReader.SheetIterator) xssfReader.getSheetsData();
         while (ite.hasNext()) {
             InputStream inputStream = ite.next();
             String sheetName = ite.getSheetName();
             SheetSource sheetSource = new SheetSource(sheetName, inputStream);
             sheetSourceList.add(sheetSource);
         }
-
     }
 
     @Override
@@ -72,7 +71,6 @@ public class XlsxSaxAnalyser extends BaseSaxAnalyser {
         if (sheetParam != null && sheetParam.getSheetNo() > 0 && sheetSourceList.size() >= sheetParam.getSheetNo()) {
             InputStream sheetInputStream = sheetSourceList.get(sheetParam.getSheetNo() - 1).getInputStream();
             parseXmlSource(sheetInputStream);
-
         } else {
             int i = 0;
             for (SheetSource sheetSource : sheetSourceList) {
@@ -80,25 +78,6 @@ public class XlsxSaxAnalyser extends BaseSaxAnalyser {
                 analysisContext.setCurrentSheet(new Sheet(i));
                 parseXmlSource(sheetSource.getInputStream());
             }
-        }
-    }
-
-    private void parseXmlSource(InputStream inputStream) {
-        InputSource sheetSource = new InputSource(inputStream);
-        try {
-            SAXParserFactory saxFactory = SAXParserFactory.newInstance();
-            saxFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            saxFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            saxFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            SAXParser saxParser = saxFactory.newSAXParser();
-            XMLReader xmlReader = saxParser.getXMLReader();
-            ContentHandler handler = new XlsxRowHandler(this, sharedStringsTable, analysisContext);
-            xmlReader.setContentHandler(handler);
-            xmlReader.parse(sheetSource);
-            inputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ExcelAnalysisException(e);
         }
     }
 
@@ -116,10 +95,40 @@ public class XlsxSaxAnalyser extends BaseSaxAnalyser {
         return sheets;
     }
 
+    /**
+     * 解析xml，POI解析xlsx是将文件转为输入流的方式，然后通过xml的方式进行解析
+     *
+     * @param inputStream
+     */
+    private void parseXmlSource(InputStream inputStream) {
+        InputSource sheetSource = new InputSource(inputStream);
+        try {
+            // 基于sax事件模型解析的方式来解析
+            SAXParserFactory saxFactory = SAXParserFactory.newInstance();
+            saxFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            saxFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            saxFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            SAXParser saxParser = saxFactory.newSAXParser();
+            XMLReader xmlReader = saxParser.getXMLReader();
+            ContentHandler handler = new XlsxRowHandler(this, sharedStringsTable, analysisContext);
+            xmlReader.setContentHandler(handler);
+            xmlReader.parse(sheetSource);
+            inputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ExcelAnalysisException(e);
+        }
+    }
+
+    /**
+     * 表示一个页签对象
+     */
     class SheetSource {
 
+        /** 表示页签名称 */
         private String sheetName;
 
+        /** 表示excel文件输入流 */
         private InputStream inputStream;
 
         public SheetSource(String sheetName, InputStream inputStream) {

@@ -4,9 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 表示解析完一行数据的事件
+ *
  * @author jipengfei
  */
 public class OneRowAnalysisFinishEvent {
+
+    /** 表示当前行的数据 */
+    private Object data;
 
     public OneRowAnalysisFinishEvent(Object content) {
         this.data = content;
@@ -21,8 +26,6 @@ public class OneRowAnalysisFinishEvent {
             data = ls;
         }
     }
-
-    private Object data;
 
     public Object getData() {
         return data;

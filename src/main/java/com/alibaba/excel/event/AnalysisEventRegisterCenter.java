@@ -1,29 +1,29 @@
 package com.alibaba.excel.event;
 
 /**
- * Event center.
+ * 表示解析过程中的事件注册中心
  *
  * @author jipengfei
  */
 public interface AnalysisEventRegisterCenter {
 
     /**
-     * Append listener
+     * 添加监听
      *
-     * @param name     listener name.
-     * @param listener Callback method after each row is parsed.
+     * @param name     监听器名称
+     * @param listener 解析每一行时的回调方法
      */
     void appendLister(String name, AnalysisEventListener listener);
 
     /**
-     * Parse one row to notify all event listeners
+     * 解析完一行后，通知所有的事件监听器
      *
      * @param event parse event
      */
     void notifyListeners(OneRowAnalysisFinishEvent event);
 
     /**
-     * Clean all listeners.
+     * 清除所有事件监听器
      */
     void cleanAllListeners();
 }

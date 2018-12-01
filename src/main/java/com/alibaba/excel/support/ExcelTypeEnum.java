@@ -10,7 +10,9 @@ import java.io.InputStream;
  */
 public enum ExcelTypeEnum {
 
-    XLS(".xls"), XLSX(".xlsx");
+    /** 文件类型 */
+    XLS(".xls"),
+    XLSX(".xlsx");
 
     private String value;
 
@@ -26,6 +28,12 @@ public enum ExcelTypeEnum {
         this.value = value;
     }
 
+    /**
+     * 根据文件输入流获取文件类型
+     *
+     * @param inputStream   文件输入流
+     * @return
+     */
     public static ExcelTypeEnum valueOf(InputStream inputStream){
         try {
             if (!inputStream.markSupported()) {

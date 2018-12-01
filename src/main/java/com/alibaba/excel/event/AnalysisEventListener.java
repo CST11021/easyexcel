@@ -10,15 +10,15 @@ import com.alibaba.excel.context.AnalysisContext;
 public abstract class AnalysisEventListener<T> {
 
     /**
-     * when analysis one row trigger invoke function
+     * 当解析一行时会来调用该函数
      *
-     * @param object  one row data
-     * @param context analysis context
+     * @param object  表示当前行解析的结果对象
+     * @param context 解析上下文对象
      */
     public abstract void invoke(T object, AnalysisContext context);
 
     /**
-     * if have something to do after all  analysis
+     * 解析完所有后调用
      *
      * @param context
      */

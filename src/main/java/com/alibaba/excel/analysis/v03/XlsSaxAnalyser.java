@@ -18,16 +18,70 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * /** * A text extractor for Excel files. * <p> * Returns the textual content of the file, suitable for *  indexing by
- * something like Lucene, but not really *  intended for display to the user. * </p> * <p> * To turn an excel file into
- * a CSV or similar, then see *  the XLS2CSVmra example * </p> * * @see
- * <a href="http://svn.apache.org/repos/asf/poi/trunk/src/examples/src/org/apache/poi/hssf/eventusermodel/examples/XLS2CSVmra.java">XLS2CSVmra</a>
+ * Excel文件的文本提取器：返回文件的文本内容，适用于像Lucene这样的索引，但不是真正用于向用户显示。
+ *
+ * 要将Excel文件转换为CSV或类似文件，请参阅XLS2CSVmra示例：
+ * @see <a href="http://svn.apache.org/repos/asf/poi/trunk/src/examples/src/org/apache/poi/hssf/eventusermodel/examples/XLS2CSVmra.java">XLS2CSVmra</a>
  *
  * @author jipengfei
  */
 public class XlsSaxAnalyser extends BaseSaxAnalyser implements HSSFListener {
 
+    /**
+     * 是否解析所有的页签，默认否，当设置当前页签时，该属性置为true
+     */
     private boolean analyAllSheet = false;
+
+    private POIFSFileSystem fs;
+
+    /**
+     * 表示最后一行
+     */
+    private int lastRowNumber;
+
+    /**
+     * 表示最后一列
+     */
+    private int lastColumnNumber;
+
+    /**
+     * Should we output the formula, or the value it has?
+     */
+    private boolean outputFormulaValues = true;
+
+    /**
+     * For parsing Formulas
+     */
+    private EventWorkbookBuilder.SheetRecordCollectingListener workbookBuildingListener;
+    private HSSFWorkbook stubWorkbook;
+    private SSTRecord sstRecord;
+    private FormatTrackingHSSFListener formatListener;
+
+    /**
+     * So we known which sheet we're on
+     */
+    private int nextRow;
+    private int nextColumn;
+    private boolean outputNextStringRecord;
+
+    /**
+     * Main HSSFListener method, processes events, and outputs the CSV as the file is processed.
+     */
+
+    /**
+     * 表示页签的索引
+     */
+    private int sheetIndex;
+
+    private List<String> records;
+
+    private boolean notAllEmpty = false;
+
+    private BoundSheetRecord[] orderedBSRs;
+
+    private List<BoundSheetRecord> boundSheetRecords = new ArrayList<BoundSheetRecord>();
+
+    private List<Sheet> sheets = new ArrayList<Sheet>();
 
     public XlsSaxAnalyser(AnalysisContext context) throws IOException {
         this.analysisContext = context;
@@ -37,7 +91,208 @@ public class XlsSaxAnalyser extends BaseSaxAnalyser implements HSSFListener {
         }
         context.setCurrentRowNum(0);
         this.fs = new POIFSFileSystem(analysisContext.getInputStream());
+    }
 
+    /**
+     * 初始化解析设置
+     */
+    private void init() {
+        lastRowNumber = 0;
+        lastColumnNumber = 0;
+        nextRow = 0;
+        nextColumn = 0;
+        sheetIndex = 0;
+        records = new ArrayList<String>();
+        notAllEmpty = false;
+        orderedBSRs = null;
+        boundSheetRecords = new ArrayList<BoundSheetRecord>();
+        sheets = new ArrayList<Sheet>();
+        if (analysisContext.getCurrentSheet() == null) {
+            this.analyAllSheet = true;
+        } else {
+            this.analyAllSheet = false;
+        }
+    }
+
+    @Override
+    public void processRecord(Record record) {
+        int thisRow = -1;
+        int thisColumn = -1;
+        String thisStr = null;
+
+        switch (record.getSid()) {
+            case BoundSheetRecord.sid:
+                boundSheetRecords.add((BoundSheetRecord) record);
+                break;
+            case BOFRecord.sid:
+                BOFRecord br = (BOFRecord) record;
+                if (br.getType() == BOFRecord.TYPE_WORKSHEET) {
+                    // Create sub workbook if required
+                    if (workbookBuildingListener != null && stubWorkbook == null) {
+                        stubWorkbook = workbookBuildingListener.getStubHSSFWorkbook();
+                    }
+
+                    if (orderedBSRs == null) {
+                        orderedBSRs = BoundSheetRecord.orderByBofPosition(boundSheetRecords);
+                    }
+                    sheetIndex++;
+
+                    Sheet sheet = new Sheet(sheetIndex, 0);
+                    sheet.setSheetName(orderedBSRs[sheetIndex - 1].getSheetname());
+                    sheets.add(sheet);
+                    if (this.analyAllSheet) {
+                        analysisContext.setCurrentSheet(sheet);
+                    }
+                }
+                break;
+
+            case SSTRecord.sid:
+                sstRecord = (SSTRecord) record;
+                break;
+
+            case BlankRecord.sid:
+                BlankRecord brec = (BlankRecord) record;
+
+                thisRow = brec.getRow();
+                thisColumn = brec.getColumn();
+                thisStr = "";
+                break;
+            case BoolErrRecord.sid:
+                BoolErrRecord berec = (BoolErrRecord) record;
+
+                thisRow = berec.getRow();
+                thisColumn = berec.getColumn();
+                thisStr = "";
+                break;
+
+            case FormulaRecord.sid:
+                FormulaRecord frec = (FormulaRecord) record;
+
+                thisRow = frec.getRow();
+                thisColumn = frec.getColumn();
+
+                if (outputFormulaValues) {
+                    if (Double.isNaN(frec.getValue())) {
+                        // Formula result is a string
+                        // This is stored in the next record
+                        outputNextStringRecord = true;
+                        nextRow = frec.getRow();
+                        nextColumn = frec.getColumn();
+                    } else {
+                        thisStr = formatListener.formatNumberDateCell(frec);
+                    }
+                } else {
+                    thisStr = HSSFFormulaParser.toFormulaString(stubWorkbook, frec.getParsedExpression());
+                }
+                break;
+            case StringRecord.sid:
+                if (outputNextStringRecord) {
+                    // String for formula
+                    StringRecord srec = (StringRecord) record;
+                    thisStr = srec.getString();
+                    thisRow = nextRow;
+                    thisColumn = nextColumn;
+                    outputNextStringRecord = false;
+                }
+                break;
+
+            case LabelRecord.sid:
+                LabelRecord lrec = (LabelRecord) record;
+
+                thisRow = lrec.getRow();
+                thisColumn = lrec.getColumn();
+                thisStr = lrec.getValue();
+                break;
+            case LabelSSTRecord.sid:
+                LabelSSTRecord lsrec = (LabelSSTRecord) record;
+
+                thisRow = lsrec.getRow();
+                thisColumn = lsrec.getColumn();
+                if (sstRecord == null) {
+                    thisStr = "";
+                } else {
+                    thisStr = sstRecord.getString(lsrec.getSSTIndex()).toString();
+                }
+                break;
+            case NoteRecord.sid:
+                NoteRecord nrec = (NoteRecord) record;
+
+                thisRow = nrec.getRow();
+                thisColumn = nrec.getColumn();
+                // TODO: Find object to match nrec.getShapeId()
+                thisStr = "(TODO)";
+                break;
+            case NumberRecord.sid:
+                NumberRecord numrec = (NumberRecord) record;
+
+                thisRow = numrec.getRow();
+                thisColumn = numrec.getColumn();
+
+                // Format
+                thisStr = formatListener.formatNumberDateCell(numrec);
+                break;
+            case RKRecord.sid:
+                RKRecord rkrec = (RKRecord) record;
+
+                thisRow = rkrec.getRow();
+                thisColumn = rkrec.getColumn();
+                thisStr = "";
+                break;
+            default:
+                break;
+        }
+
+        // Handle new row
+        if (thisRow != -1 && thisRow != lastRowNumber) {
+            lastColumnNumber = -1;
+        }
+
+        // Handle missing column
+        if (record instanceof MissingCellDummyRecord) {
+            MissingCellDummyRecord mc = (MissingCellDummyRecord) record;
+            thisRow = mc.getRow();
+            thisColumn = mc.getColumn();
+            thisStr = "";
+        }
+
+        // If we got something to print out, do so
+        if (thisStr != null) {
+
+            if (analysisContext.trim()) {
+                thisStr = thisStr.trim();
+            }
+            if (!"".equals(thisStr)) {
+                notAllEmpty = true;
+            }
+            //            }
+            records.add(thisStr);
+        }
+
+        // Update column and row count
+        if (thisRow > -1) {
+            lastRowNumber = thisRow;
+        }
+        if (thisColumn > -1) {
+            lastColumnNumber = thisColumn;
+        }
+
+        // Handle end of row
+        if (record instanceof LastCellOfRowDummyRecord) {
+            thisRow = ((LastCellOfRowDummyRecord) record).getRow();
+
+            if (lastColumnNumber == -1) {
+                lastColumnNumber = 0;
+            }
+            analysisContext.setCurrentRowNum(thisRow);
+            Sheet sheet = analysisContext.getCurrentSheet();
+
+            if ((sheet == null || sheet.getSheetNo() == sheetIndex) && notAllEmpty) {
+                notifyListeners(new OneRowAnalysisFinishEvent(records));
+            }
+            records.clear();
+            lastColumnNumber = -1;
+            notAllEmpty = false;
+        }
     }
 
     @Override
@@ -69,250 +324,4 @@ public class XlsSaxAnalyser extends BaseSaxAnalyser implements HSSFListener {
         }
     }
 
-    private void init() {
-        lastRowNumber = 0;
-        lastColumnNumber = 0;
-        nextRow = 0;
-
-        nextColumn = 0;
-
-        sheetIndex = 0;
-
-        records = new ArrayList<String>();
-
-        notAllEmpty = false;
-
-        orderedBSRs = null;
-
-        boundSheetRecords = new ArrayList<BoundSheetRecord>();
-
-        sheets = new ArrayList<Sheet>();
-        if (analysisContext.getCurrentSheet() == null) {
-            this.analyAllSheet = true;
-        } else {
-            this.analyAllSheet = false;
-        }
-    }
-
-    private POIFSFileSystem fs;
-
-    private int lastRowNumber;
-    private int lastColumnNumber;
-
-    /**
-     * Should we output the formula, or the value it has?
-     */
-    private boolean outputFormulaValues = true;
-
-    /**
-     * For parsing Formulas
-     */
-    private EventWorkbookBuilder.SheetRecordCollectingListener workbookBuildingListener;
-    private HSSFWorkbook stubWorkbook;
-    private SSTRecord sstRecord;
-    private FormatTrackingHSSFListener formatListener;
-
-    /**
-     * So we known which sheet we're on
-     */
-
-    private int nextRow;
-    private int nextColumn;
-    private boolean outputNextStringRecord;
-
-    /**
-     * Main HSSFListener method, processes events, and outputs the CSV as the file is processed.
-     */
-
-    private int sheetIndex;
-
-    private List<String> records;
-
-    private boolean notAllEmpty = false;
-
-    private BoundSheetRecord[] orderedBSRs;
-
-    private List<BoundSheetRecord> boundSheetRecords = new ArrayList<BoundSheetRecord>();
-
-    private List<Sheet> sheets = new ArrayList<Sheet>();
-
-    public void processRecord(Record record) {
-        int thisRow = -1;
-        int thisColumn = -1;
-        String thisStr = null;
-
-        switch (record.getSid()) {
-            case BoundSheetRecord.sid:
-                boundSheetRecords.add((BoundSheetRecord)record);
-                break;
-            case BOFRecord.sid:
-                BOFRecord br = (BOFRecord)record;
-                if (br.getType() == BOFRecord.TYPE_WORKSHEET) {
-                    // Create sub workbook if required
-                    if (workbookBuildingListener != null && stubWorkbook == null) {
-                        stubWorkbook = workbookBuildingListener.getStubHSSFWorkbook();
-                    }
-
-                    if (orderedBSRs == null) {
-                        orderedBSRs = BoundSheetRecord.orderByBofPosition(boundSheetRecords);
-                    }
-                    sheetIndex++;
-
-                    Sheet sheet = new Sheet(sheetIndex, 0);
-                    sheet.setSheetName(orderedBSRs[sheetIndex - 1].getSheetname());
-                    sheets.add(sheet);
-                    if (this.analyAllSheet) {
-                        analysisContext.setCurrentSheet(sheet);
-                    }
-                }
-                break;
-
-            case SSTRecord.sid:
-                sstRecord = (SSTRecord)record;
-                break;
-
-            case BlankRecord.sid:
-                BlankRecord brec = (BlankRecord)record;
-
-                thisRow = brec.getRow();
-                thisColumn = brec.getColumn();
-                thisStr = "";
-                break;
-            case BoolErrRecord.sid:
-                BoolErrRecord berec = (BoolErrRecord)record;
-
-                thisRow = berec.getRow();
-                thisColumn = berec.getColumn();
-                thisStr = "";
-                break;
-
-            case FormulaRecord.sid:
-                FormulaRecord frec = (FormulaRecord)record;
-
-                thisRow = frec.getRow();
-                thisColumn = frec.getColumn();
-
-                if (outputFormulaValues) {
-                    if (Double.isNaN(frec.getValue())) {
-                        // Formula result is a string
-                        // This is stored in the next record
-                        outputNextStringRecord = true;
-                        nextRow = frec.getRow();
-                        nextColumn = frec.getColumn();
-                    } else {
-                        thisStr = formatListener.formatNumberDateCell(frec);
-                    }
-                } else {
-                    thisStr = HSSFFormulaParser.toFormulaString(stubWorkbook, frec.getParsedExpression());
-                }
-                break;
-            case StringRecord.sid:
-                if (outputNextStringRecord) {
-                    // String for formula
-                    StringRecord srec = (StringRecord)record;
-                    thisStr = srec.getString();
-                    thisRow = nextRow;
-                    thisColumn = nextColumn;
-                    outputNextStringRecord = false;
-                }
-                break;
-
-            case LabelRecord.sid:
-                LabelRecord lrec = (LabelRecord)record;
-
-                thisRow = lrec.getRow();
-                thisColumn = lrec.getColumn();
-                thisStr = lrec.getValue();
-                break;
-            case LabelSSTRecord.sid:
-                LabelSSTRecord lsrec = (LabelSSTRecord)record;
-
-                thisRow = lsrec.getRow();
-                thisColumn = lsrec.getColumn();
-                if (sstRecord == null) {
-                    thisStr = "";
-                } else {
-                    thisStr = sstRecord.getString(lsrec.getSSTIndex()).toString();
-                }
-                break;
-            case NoteRecord.sid:
-                NoteRecord nrec = (NoteRecord)record;
-
-                thisRow = nrec.getRow();
-                thisColumn = nrec.getColumn();
-                // TODO: Find object to match nrec.getShapeId()
-                thisStr = "(TODO)";
-                break;
-            case NumberRecord.sid:
-                NumberRecord numrec = (NumberRecord)record;
-
-                thisRow = numrec.getRow();
-                thisColumn = numrec.getColumn();
-
-                // Format
-                thisStr = formatListener.formatNumberDateCell(numrec);
-                break;
-            case RKRecord.sid:
-                RKRecord rkrec = (RKRecord)record;
-
-                thisRow = rkrec.getRow();
-                thisColumn = rkrec.getColumn();
-                thisStr = "";
-                break;
-            default:
-                break;
-        }
-
-        // Handle new row
-        if (thisRow != -1 && thisRow != lastRowNumber) {
-            lastColumnNumber = -1;
-        }
-
-        // Handle missing column
-        if (record instanceof MissingCellDummyRecord) {
-            MissingCellDummyRecord mc = (MissingCellDummyRecord)record;
-            thisRow = mc.getRow();
-            thisColumn = mc.getColumn();
-            thisStr = "";
-        }
-
-        // If we got something to print out, do so
-        if (thisStr != null) {
-
-            if (analysisContext.trim()) {
-                thisStr = thisStr.trim();
-            }
-            if (!"".equals(thisStr)) {
-                notAllEmpty = true;
-            }
-            //            }
-            records.add(thisStr);
-        }
-
-        // Update column and row count
-        if (thisRow > -1) {
-            lastRowNumber = thisRow;
-        }
-        if (thisColumn > -1) {
-            lastColumnNumber = thisColumn;
-        }
-
-        // Handle end of row
-        if (record instanceof LastCellOfRowDummyRecord) {
-            thisRow = ((LastCellOfRowDummyRecord)record).getRow();
-
-            if (lastColumnNumber == -1) {
-                lastColumnNumber = 0;
-            }
-            analysisContext.setCurrentRowNum(thisRow);
-            Sheet sheet = analysisContext.getCurrentSheet();
-
-            if ((sheet == null || sheet.getSheetNo() == sheetIndex) && notAllEmpty) {
-                notifyListeners(new OneRowAnalysisFinishEvent(records));
-            }
-            records.clear();
-            lastColumnNumber = -1;
-            notAllEmpty = false;
-        }
-    }
 }

@@ -22,52 +22,57 @@ public interface AnalysisContext {
     Object getCustom();
 
     /**
-     * get current sheet
+     * 获取当前要解析的页签
      *
      * @return current analysis sheet
      */
     Sheet getCurrentSheet();
 
     /**
-     * set current sheet
+     * 设置当前要解析的页签
+     *
      * @param sheet
      */
     void setCurrentSheet(Sheet sheet);
 
     /**
+     * 获取excel类型
      *
-     * get excel type
      * @return excel type
      */
     ExcelTypeEnum getExcelType();
 
     /**
-     * get in io
+     * 获取文件输入流
+     *
      * @return file io
      */
     InputStream getInputStream();
 
     /**
+     * 获取解析监听器
      *
-     * custom listener
      * @return listener
      */
     AnalysisEventListener getEventListener();
 
     /**
-     * get current row
+     * 获取当前解析的行号
+     *
      * @return
      */
     Integer getCurrentRowNum();
 
     /**
-     * set  current row num
+     * 设置当前要解析的行号
+     *
      * @param row
      */
     void setCurrentRowNum(Integer row);
 
     /**
-     * get total row ,Data may be inaccurate
+     * 获取所有行，可能不准确
+     *
      * @return
      */
     @Deprecated
@@ -81,7 +86,8 @@ public interface AnalysisContext {
     void setTotalCount(Integer totalCount);
 
     /**
-     * get excel head
+     * 获取excel的head
+     *
      * @return
      */
     ExcelHeadProperty getExcelHeadProperty();
@@ -94,38 +100,41 @@ public interface AnalysisContext {
     void buildExcelHeadProperty(Class<? extends BaseRowModel> clazz, List<String> headOneRow);
 
     /**
+     * if need to short match the content
      *
-     *if need to short match the content
      * @return
      */
     boolean trim();
 
     /**
-     * set current result
+     * 设置当前行的解析结果
+     *
      * @param result
      */
     void setCurrentRowAnalysisResult(Object result);
 
-
     /**
-     * get current result
-     * @return  get current result
+     * 获取当前行的解析结果
+     *
+     * @return
      */
     Object getCurrentRowAnalysisResult();
 
     /**
-     * Interrupt execution
+     * 中断执行
      */
     void interrupt();
 
     /**
-     *  date use1904WindowDate
+     * 是否使用1904Window日期系统
+     *
      * @return
      */
-    boolean  use1904WindowDate();
+    boolean use1904WindowDate();
 
     /**
-     * date use1904WindowDate
+     * 是否使用1904Window日期系统
+     *
      * @param use1904WindowDate
      */
     void setUse1904WindowDate(boolean use1904WindowDate);

@@ -12,30 +12,46 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author jipengfei
  */
 public class AnalysisContextImpl implements AnalysisContext {
 
     private Object custom;
 
+    /** 表示当前要解析的页签 */
     private Sheet currentSheet;
 
+    /** excel文件类型 */
     private ExcelTypeEnum excelType;
 
+    /** 表示文件输入流 */
     private InputStream inputStream;
 
     private AnalysisEventListener eventListener;
 
+    /** 表示当前行号 */
     private Integer currentRowNum;
 
+    /** 表示总行数 */
     private Integer totalCount;
 
+    /** 表示excel表头 */
     private ExcelHeadProperty excelHeadProperty;
 
     private boolean trim;
 
     private boolean use1904WindowDate = false;
+
+    /** 表示当前行的解析结果 */
+    private Object currentRowAnalysisResult;
+
+    public AnalysisContextImpl(InputStream inputStream, ExcelTypeEnum excelTypeEnum, Object custom, AnalysisEventListener listener, boolean trim) {
+        this.custom = custom;
+        this.eventListener = listener;
+        this.inputStream = inputStream;
+        this.excelType = excelTypeEnum;
+        this.trim = trim;
+    }
 
     @Override
     public void setUse1904WindowDate(boolean use1904WindowDate) {
@@ -62,17 +78,6 @@ public class AnalysisContextImpl implements AnalysisContext {
         this.currentRowAnalysisResult = currentRowAnalysisResult;
     }
 
-    private Object currentRowAnalysisResult;
-
-    public AnalysisContextImpl(InputStream inputStream, ExcelTypeEnum excelTypeEnum, Object custom,
-                               AnalysisEventListener listener, boolean trim) {
-        this.custom = custom;
-        this.eventListener = listener;
-        this.inputStream = inputStream;
-        this.excelType = excelTypeEnum;
-        this.trim = trim;
-    }
-
     @Override
     public void setCurrentSheet(Sheet currentSheet) {
         cleanCurrentSheet();
@@ -82,12 +87,15 @@ public class AnalysisContextImpl implements AnalysisContext {
         }
     }
 
+    /**
+     * 清楚当前解析的页签
+     */
     private void cleanCurrentSheet() {
         this.currentSheet = null;
         this.excelHeadProperty = null;
         this.totalCount = 0;
         this.currentRowAnalysisResult = null;
-        this.currentRowNum =0;
+        this.currentRowNum = 0;
     }
 
     @Override
@@ -99,6 +107,7 @@ public class AnalysisContextImpl implements AnalysisContext {
         this.excelType = excelType;
     }
 
+    @Override
     public Object getCustom() {
         return custom;
     }

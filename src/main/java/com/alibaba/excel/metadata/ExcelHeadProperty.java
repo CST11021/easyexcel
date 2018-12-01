@@ -14,25 +14,22 @@ import java.util.*;
  */
 public class ExcelHeadProperty {
 
-    /**
-     * Custom class
-     */
+    /** 表示一行表头对象 */
     private Class<? extends BaseRowModel> headClazz;
 
-    /**
-     * A two-dimensional array describing the header
-     */
+    /** 描述表头的二维数组 */
     private List<List<String>> head = new ArrayList<List<String>>();
 
-    /**
-     * Attributes described by the header
-     */
+    /** 描述表头的属性 */
     private List<ExcelColumnProperty> columnPropertyList = new ArrayList<ExcelColumnProperty>();
 
     /**
      * Attributes described by the header
      */
     private Map<Integer, ExcelColumnProperty> excelColumnPropertyMap1 = new HashMap<Integer, ExcelColumnProperty>();
+
+
+
 
     public ExcelHeadProperty(Class<? extends BaseRowModel> headClazz, List<List<String>> head) {
         this.headClazz = headClazz;
