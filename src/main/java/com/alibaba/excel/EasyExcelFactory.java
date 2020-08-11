@@ -19,10 +19,10 @@ import java.util.List;
 public class EasyExcelFactory {
 
     /**
-     * Quickly read small files，no more than 10,000 lines.
+     * 快速读取不超过10,000行的小文件。
      *
-     * @param in    the POI filesystem that contains the Workbook stream.
-     * @param sheet read sheet.
+     * @param in    文件输入流程
+     * @param sheet 表示excel的sheet
      * @return analysis result.
      */
     public static List<Object> read(InputStream in, Sheet sheet) {
@@ -41,11 +41,11 @@ public class EasyExcelFactory {
     }
 
     /**
-     * Parsing large file
+     * 解析大文件
      *
-     * @param in       the POI filesystem that contains the Workbook stream.
-     * @param sheet    read sheet.
-     * @param listener Callback method after each row is parsed.
+     * @param in       文件输入流程
+     * @param sheet    表示excel的sheet
+     * @param listener 解析每行之后的回调方法
      */
     public static void readBySax(InputStream in, Sheet sheet, AnalysisEventListener listener) {
         new ExcelReader(in, null, listener).read(sheet);

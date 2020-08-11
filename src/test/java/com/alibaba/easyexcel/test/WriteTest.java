@@ -22,6 +22,24 @@ import static com.alibaba.easyexcel.test.util.DataUtil.*;
 public class WriteTest {
 
     @Test
+    public void t() throws Exception {
+        OutputStream out = new FileOutputStream("/Users/wanghongzhan/2018.xlsx");
+        ExcelWriter writer = EasyExcelFactory.getWriter(out);
+        Sheet sheet1 = new Sheet(1, 1);
+        // sheet1.setSheetName("第一个sheet");
+        sheet1.setAutoWidth(Boolean.TRUE);
+
+        Table table2 = new Table(1);
+        // table2.setTableStyle(createTableStyle());
+        table2.setClazz(WriteModel.class);
+
+        writer.write(createTestListJavaMode(), sheet1, table2);
+
+        writer.finish();
+        out.close();
+    }
+
+    @Test
     public void writeV2007() throws IOException {
         OutputStream out = new FileOutputStream("/Users/wanghongzhan/2007.xlsx");
         ExcelWriter writer = EasyExcelFactory.getWriter(out);
@@ -69,7 +87,7 @@ public class WriteTest {
     @Test
     public void writeV2007WithTemplate() throws IOException {
         InputStream inputStream = FileUtil.getResourcesFileInputStream("temp.xlsx");
-        OutputStream out = new FileOutputStream("/Users/jipengfei/2007.xlsx");
+        OutputStream out = new FileOutputStream("t.xlsx");
         ExcelWriter writer = EasyExcelFactory.getWriterWithTemp(inputStream, out, ExcelTypeEnum.XLSX, true);
         //写第一个sheet, sheet1  数据全是List<String> 无模型映射关系
         Sheet sheet1 = new Sheet(1, 3);
@@ -116,7 +134,7 @@ public class WriteTest {
     @Test
     public void writeV2007WithTemplateAndHandler() throws IOException {
         InputStream inputStream = FileUtil.getResourcesFileInputStream("temp.xlsx");
-        OutputStream out = new FileOutputStream("/Users/jipengfei/2007.xlsx");
+        OutputStream out = new FileOutputStream("/Users/wanghongzhan/2007.xlsx");
         ExcelWriter writer = EasyExcelFactory.getWriterWithTempAndHandler(inputStream, out, ExcelTypeEnum.XLSX, true,
                 new AfterWriteHandlerImpl());
         //写第一个sheet, sheet1  数据全是List<String> 无模型映射关系

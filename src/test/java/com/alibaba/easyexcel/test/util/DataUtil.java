@@ -56,7 +56,7 @@ public class DataUtil {
 
     public static List<WriteModel> createTestListJavaMode(){
         List<WriteModel> model1s = new ArrayList<WriteModel>();
-        for (int i = 0; i <10000 ; i++) {
+        for (int i = 0; i <1000 ; i++) {
             WriteModel model1 = new WriteModel();
             model1.setP1("第一列，第行");
             model1.setP2("121212jjj");
