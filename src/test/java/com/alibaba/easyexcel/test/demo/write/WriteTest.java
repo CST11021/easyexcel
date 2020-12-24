@@ -51,25 +51,23 @@ public class WriteTest {
     @Test
     public void simpleWrite() {
         // 写法1
-        String fileName = TestFileUtil.getPath() + "simpleWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "simpleWrite.xlsx";
         // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-        // 如果这里想使用03 则 传入excelType参数即可
         EasyExcel.write(fileName, DemoData.class).sheet("模板").doWrite(data());
 
-        // 写法2
-        fileName = TestFileUtil.getPath() + "simpleWrite" + System.currentTimeMillis() + ".xlsx";
-        // 这里 需要指定写用哪个class去写
-        ExcelWriter excelWriter = null;
-        try {
-            excelWriter = EasyExcel.write(fileName, DemoData.class).build();
-            WriteSheet writeSheet = EasyExcel.writerSheet("模板").build();
-            excelWriter.write(data(), writeSheet);
-        } finally {
-            // 千万别忘记finish 会帮忙关闭流
-            if (excelWriter != null) {
-                excelWriter.finish();
-            }
-        }
+        // // 写法2
+        // fileName = TestFileUtil.getPath() + "simpleWrite" + System.currentTimeMillis() + ".xlsx";
+        // ExcelWriter excelWriter = null;
+        // try {
+        //     excelWriter = EasyExcel.write(fileName, DemoData.class).build();
+        //     WriteSheet writeSheet = EasyExcel.writerSheet("模板").build();
+        //     excelWriter.write(data(), writeSheet);
+        // } finally {
+        //     // 千万别忘记finish 会帮忙关闭流
+        //     if (excelWriter != null) {
+        //         excelWriter.finish();
+        //     }
+        // }
     }
 
     /**
@@ -85,21 +83,22 @@ public class WriteTest {
      */
     @Test
     public void excludeOrIncludeWrite() {
-        String fileName = TestFileUtil.getPath() + "excludeOrIncludeWrite" + System.currentTimeMillis() + ".xlsx";
-
-        // 根据用户传入字段 假设我们要忽略 date
+        String fileName = "excludeWrite.xlsx";
+        // 跳过DemoData#date字段的写入
         Set<String> excludeColumnFiledNames = new HashSet<String>();
         excludeColumnFiledNames.add("date");
-        // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-        EasyExcel.write(fileName, DemoData.class).excludeColumnFiledNames(excludeColumnFiledNames).sheet("模板")
+        EasyExcel.write(fileName, DemoData.class)
+                .excludeColumnFiledNames(excludeColumnFiledNames).
+                sheet("模板")
             .doWrite(data());
 
-        fileName = TestFileUtil.getPath() + "excludeOrIncludeWrite" + System.currentTimeMillis() + ".xlsx";
-        // 根据用户传入字段 假设我们只要导出 date
+        fileName = "includeWrite.xlsx";
+        // 只要导出DemoData#date字段
         Set<String> includeColumnFiledNames = new HashSet<String>();
         includeColumnFiledNames.add("date");
-        // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-        EasyExcel.write(fileName, DemoData.class).includeColumnFiledNames(includeColumnFiledNames).sheet("模板")
+        EasyExcel.write(fileName, DemoData.class)
+                .includeColumnFiledNames(includeColumnFiledNames)
+                .sheet("模板")
             .doWrite(data());
     }
 
@@ -114,8 +113,7 @@ public class WriteTest {
      */
     @Test
     public void indexWrite() {
-        String fileName = TestFileUtil.getPath() + "indexWrite" + System.currentTimeMillis() + ".xlsx";
-        // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+        String fileName = "indexWrite.xlsx";
         EasyExcel.write(fileName, IndexData.class).sheet("模板").doWrite(data());
     }
 
@@ -130,13 +128,12 @@ public class WriteTest {
      */
     @Test
     public void complexHeadWrite() {
-        String fileName = TestFileUtil.getPath() + "complexHeadWrite" + System.currentTimeMillis() + ".xlsx";
-        // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+        String fileName = "complexHeadWrite.xlsx";
         EasyExcel.write(fileName, ComplexHeadData.class).sheet("模板").doWrite(data());
     }
 
     /**
-     * 重复多次写入
+     * 重复多次写入，适合大批量数据写入
      * <p>
      * 1. 创建excel对应的实体对象 参照{@link ComplexHeadData}
      * <p>
@@ -147,7 +144,7 @@ public class WriteTest {
     @Test
     public void repeatedWrite() {
         // 方法1 如果写到同一个sheet
-        String fileName = TestFileUtil.getPath() + "repeatedWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "repeatedWrite1.xlsx";
         ExcelWriter excelWriter = null;
         try {
             // 这里 需要指定写用哪个class去写
@@ -168,7 +165,7 @@ public class WriteTest {
         }
 
         // 方法2 如果写到不同的sheet 同一个对象
-        fileName = TestFileUtil.getPath() + "repeatedWrite" + System.currentTimeMillis() + ".xlsx";
+        fileName = "repeatedWrite2.xlsx";
         try {
             // 这里 指定文件
             excelWriter = EasyExcel.write(fileName, DemoData.class).build();
@@ -188,7 +185,7 @@ public class WriteTest {
         }
 
         // 方法3 如果写到不同的sheet 不同的对象
-        fileName = TestFileUtil.getPath() + "repeatedWrite" + System.currentTimeMillis() + ".xlsx";
+        fileName = "repeatedWrite3.xlsx";
         try {
             // 这里 指定文件
             excelWriter = EasyExcel.write(fileName).build();
@@ -219,7 +216,7 @@ public class WriteTest {
      */
     @Test
     public void converterWrite() {
-        String fileName = TestFileUtil.getPath() + "converterWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "converterWrite.xlsx";
         // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
         EasyExcel.write(fileName, ConverterData.class).sheet("模板").doWrite(data());
     }
@@ -233,7 +230,7 @@ public class WriteTest {
      */
     @Test
     public void imageWrite() throws Exception {
-        String fileName = TestFileUtil.getPath() + "imageWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "imageWrite.xlsx";
         // 如果使用流 记得关闭
         InputStream inputStream = null;
         try {
@@ -271,7 +268,7 @@ public class WriteTest {
     @Test
     public void templateWrite() {
         String templateFileName = TestFileUtil.getPath() + "demo" + File.separator + "demo.xlsx";
-        String fileName = TestFileUtil.getPath() + "templateWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "templateWrite.xlsx";
         // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
         EasyExcel.write(fileName, DemoData.class).withTemplate(templateFileName).sheet().doWrite(data());
     }
@@ -287,7 +284,7 @@ public class WriteTest {
      */
     @Test
     public void widthAndHeightWrite() {
-        String fileName = TestFileUtil.getPath() + "widthAndHeightWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "widthAndHeightWrite.xlsx";
         // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
         EasyExcel.write(fileName, WidthAndHeightData.class).sheet("模板").doWrite(data());
     }
@@ -303,7 +300,7 @@ public class WriteTest {
      */
     @Test
     public void annotationStyleWrite() {
-        String fileName = TestFileUtil.getPath() + "annotationStyleWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "annotationStyleWrite.xlsx";
         // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
         EasyExcel.write(fileName, DemoStyleData.class).sheet("模板").doWrite(data());
     }
@@ -382,7 +379,7 @@ public class WriteTest {
      */
     @Test
     public void tableWrite() {
-        String fileName = TestFileUtil.getPath() + "tableWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "tableWrite.xlsx";
         // 这里直接写多个table的案例了，如果只有一个 也可以直一行代码搞定，参照其他案例
         // 这里 需要指定写用哪个class去写
         ExcelWriter excelWriter = null;
@@ -417,7 +414,7 @@ public class WriteTest {
      */
     @Test
     public void dynamicHeadWrite() {
-        String fileName = TestFileUtil.getPath() + "dynamicHeadWrite" + System.currentTimeMillis() + ".xlsx";
+        String fileName = "dynamicHeadWrite.xlsx";
         EasyExcel.write(fileName)
             // 这里放入动态头
             .head(head()).sheet("模板")
@@ -540,17 +537,17 @@ public class WriteTest {
     }
 
     private List<List<String>> head() {
-        List<List<String>> list = new ArrayList<List<String>>();
-        List<String> head0 = new ArrayList<String>();
-        head0.add("字符串" + System.currentTimeMillis());
-        List<String> head1 = new ArrayList<String>();
-        head1.add("数字" + System.currentTimeMillis());
-        List<String> head2 = new ArrayList<String>();
-        head2.add("日期" + System.currentTimeMillis());
-        list.add(head0);
-        list.add(head1);
-        list.add(head2);
-        return list;
+        List<List<String>> cols = new ArrayList<List<String>>();
+        List<String> row1 = new ArrayList<String>();
+        row1.add("字符串" + System.currentTimeMillis());
+        List<String> row2 = new ArrayList<String>();
+        row2.add("数字" + System.currentTimeMillis());
+        List<String> row3 = new ArrayList<String>();
+        row3.add("日期" + System.currentTimeMillis());
+        cols.add(row1);
+        cols.add(row2);
+        cols.add(row3);
+        return cols;
     }
 
     private List<List<Object>> dataList() {
